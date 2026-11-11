@@ -4,6 +4,21 @@ Hands-on deployment notes from a single AMD Ryzen AI Max+ 395 machine.
 Not a tutorial — a record of what was measured, what broke, and what the
 benchmarks got wrong.
 
+**Results at a glance**
+
+- **125B MoE (Q6_K_XL) on 128 GB unified memory**: 34.9–36.9 t/s median
+  generation, 169 GB resident, 262K context, 10 h 44 m continuous with zero
+  restarts, −4~6 % degradation at 224K+.
+- **Two-model setup**: a 125B MoE for long context, a 27B Q8 for coding at
+  13.6 t/s. One model at a time — concurrency on this box is a bandwidth
+  problem, not a scheduling one.
+- **Video (MiniMax H3)**: VRAM peak is flat at 52.2–53.3 GiB across a 2.25×
+  pixel-area range; wall time grows superlinearly.
+- **Thermals**: 25 days of continuous operation, 14,104 full-load samples,
+  **zero hard-throttle events**. Edge temperature is decided by the power tier,
+  not the cooling: 160 W peaks at 94 °C, 120 W peaks at 88 °C with zero samples
+  above 90 °C.
+
 ---
 
 ## Hardware
@@ -21,7 +36,7 @@ model at Q6_K_XL is ~169 GB on disk; it runs because weights stream from
 NVMe into the same memory the iGPU reads from — no PCIe copy, no discrete
 VRAM ceiling.
 
-That is also its limit. See below.
+That is also its limit.
 
 ## The core constraint: one model at a time
 
@@ -32,10 +47,8 @@ slower.
 
 **So concurrency is not a scheduling problem on this box. It is a bandwidth
 problem.** Scaling means more machines, each running one model — not a bigger
-machine running several.
-
-Both LLM backends also bind port 8080 by default, which enforces the same
-conclusion at the OS level: only one can be up.
+machine running several. Both LLM backends also bind port 8080 by default,
+which enforces the same conclusion at the OS level: only one can be up.
 
 ## Three backends, mutually exclusive
 
@@ -103,16 +116,14 @@ the truth.** Any draft-model proposal now has to report results at 32K / 64K /
 
 ## Thermals: recirculation, not dissipation
 
-The FAEX1 ships with a 160 W cooling solution — two turbine fans and a large
-vapor chamber. It is enough for a benchmark run. It is not enough for multi-hour
-inference: sustained load pushes the edge temperature up towards **~94 °C** on
-the highest power tier. The SoC starts downclocking slightly well before the
-hard throttling line — the clock drops a few percent, not to the emergency
-floor.
+Sustained load pushes the edge temperature to **~94 °C** on the highest power
+tier. The SoC downclocks a few percent rather than hitting the hard throttling
+floor — the clock never fell below it across 14,104 full-load samples over 25
+days.
 
-The bottleneck is not raw dissipation. It is **recirculation**. The rear I/O
-panel is the exhaust; on a desk, that hot air curls back into the top intake
-about thirty centimetres above it. The machine ends up heating its own supply air.
+But dissipation was never the bottleneck. The rear I/O panel is the exhaust;
+on a desk, that hot air curls back into the top intake about thirty centimetres
+above it. **The machine ends up heating its own supply air.**
 
 ![Exhaust hood](faex1-cooling.svg)
 
@@ -122,11 +133,11 @@ about thirty centimetres above it. The machine ends up heating its own supply ai
 
 *The actual build. Enclosure is a reused mooncake gift box; two 80 mm fans bolted through the lid; the controller is taped to the right side and reads 33 °C — below the 35 °C ramp start.*
 
-*The first revision used a reused headphone box instead. It failed for a mundane reason: the cardboard lid was not stiff enough, the fans sagged it over time, and the seam started leaking. Sealing it with wax only bought a little more time. The second revision is identical apart from the enclosure — same two fans, same controller, same filter-and-plenum layout; only a stiffer, better-sealed box was swapped in. The lesson is that the airflow design was never the fragile part; the container was.*
+### The fix, and the one number that matters
 
-### The fix: separate the intake from the exhaust
-
-Do not touch the internal airflow. Change only the boundary conditions:
+Do not touch the internal airflow — change only the boundary conditions. One
+intake path, one exhaust path, **and the box sealed so there is no third
+opening**:
 
 1. **One intake path.** Invert the machine so the stock intake grille faces
    down, and press it flat against a filtered cut-out in the bottom of a box.
@@ -136,59 +147,28 @@ Do not touch the internal airflow. Change only the boundary conditions:
 The box adds no cooling capacity. It only stops the machine from breathing its
 own exhaust.
 
-### Sealing is the whole trick
-
-This is the part that is easy to get wrong and fatal when wrong:
-
-- If the box leaks, **cold air takes the shortcut** through the gap instead of
-  the filter — the filter becomes decorative.
-- If the box leaks, **hot air escapes back into the plenum** through that same
-  gap, and the recirculation you were fixing comes back.
-
-So every seam gets closed:
-
-| Seam | How |
-|---|---|
-| Bottom | Only the cut-out under the grille; lint sheet taped flat over it |
-| Machine ↔ filter | Chassis weight alone — it presses down on the sheet |
-| Cable pass-through | Power + probe wires exit through one hole, then taped shut |
-| Lid joint | Tape around the perimeter |
-
-**Rule: the box gets exactly two openings — intake at the bottom (through the
-filter) and exhaust at the top (through the fans). No third hole.**
-
-### Parts
+A filter plus a sealed box is a **high-impedance system**. A normal 25 mm case
+fan moves 2–3 mmH₂O of static pressure; behind a lint sheet it stalls to nearly
+nothing — it spins, and no air moves. The fans used here push **50.8 mmH₂O**,
+roughly twenty times more. **Airflow rating is irrelevant here; static pressure
+is the only number that matters.**
 
 | Item | What | Why this one |
 |---|---|---|
-| Enclosure | Reused mooncake gift box, ~1.5 L | Free, and already the right size — and stiff enough that the fans don't sag the lid |
+| Enclosure | Reused mooncake gift box, ~1.5 L | Free, the right size, and stiff enough that the fans don't sag the lid |
 | Filter | Washing-machine lint sheet | Catches dust without choking airflow |
 | Fans | 2× SilverStone **SST-FHS80X** | 80 × 38 mm, **50.8 mmH₂O** static, 83.7 CFM, PWM 2k–10k RPM |
 | Control | PWM temperature controller, probe taped at the rear vent | Tracks exhaust temperature, not a lagging die sensor |
 | Setpoint | 35–45 °C ramp | Quiet at idle, full speed well before throttling |
 
-### Why these fans, specifically
-
-A filter plus a sealed box is a high-impedance system. A normal 25 mm case fan
-moves 2–3 mmH₂O of static pressure; behind a lint sheet it stalls to nearly
-nothing — it spins, and no air moves.
-
-The FHS80X pushes **50.8 mmH₂O**, roughly twenty times more. That is the entire
-reason this works. **Airflow rating is irrelevant here; static pressure is the
-only number that matters.**
-
-### Result
+### Results
 
 **Twenty-five days of continuous operation, 14,104 full-load samples, zero
-hard-throttle events** — the clock never fell below the emergency floor. Peak
-edge temperature reached 94 °C on the highest power tier, and the fans stayed
-at the low end of their ramp, because the intake air never gets hot — which is
-the quietest possible outcome for a 10,000 RPM fan.
+hard-throttle events** — and the fans stayed at the low end of their ramp,
+because the intake air never gets hot.
 
-### Power tiers decide the tail, not the median
-
-The box has two power tiers, set in firmware: **160 W and 120 W**. They change
-the shape of the temperature distribution, not its middle.
+**Power tiers decide the tail, not the median.** The box has two tiers, set in
+firmware: **160 W and 120 W**.
 
 | PPT tier | Samples | Median edge temp | p90 | Peak | Samples ≥ 90 °C |
 |---|---|---|---|---|---|
@@ -198,30 +178,20 @@ the shape of the temperature distribution, not its middle.
 
 Median temperature is identical across all three tiers. What the lower tier
 buys is the **tail**: p90 drops by 5 °C, peak by 6 °C, and the ≥ 90 °C samples
-go to zero. In other words, dropping the tier does not make the machine cooler
-on average — it makes the worst case stop happening.
+go to zero. Dropping the tier does not make the machine cooler on average — it
+makes the worst case stop happening.
 
-The remaining gap between the tiers is the chip protecting itself, not the
-cooling struggling: above ~88 °C the clock downclocks by roughly 7 %, well
-short of the hard throttling floor.
+**And the enclosure is what makes that possible.** Over a five-day stretch with
+no cooling rig at all, ambient was about 10 °C lower than usual — and the
+full-load temperature was **not lower at all**, sitting in the same 76–82 °C
+band. Cooler ambient should have helped. It did not, because the limiting
+factor was never the room temperature but the air path itself: without the
+sealed plenum, the machine keeps re-breathing its own exhaust. **A 10 °C cooler
+room is worth nothing if the box still inhales its own tail.**
 
 *(Temperatures are `edge` readings from the SoC die, sampled once a minute.
 The `power` column in the logs is package power — whole-APU, not the GPU core
 — so tiers have to be compared within the same power band.)*
-
-### Without the enclosure, the box is not merely "a bit warmer"
-
-The enclosure is not a nice-to-have. Measured on a five-day stretch where the
-machine ran at a different location with no cooling rig at all, ambient was
-about 10 °C lower than usual — and the full-load temperature was **not lower
-at all**. The samples sit slightly *above* the enclosed-box figures, in the
-same 76–82 °C band, despite the cooler room.
-
-Cooler ambient should have helped. It did not, because the limiting factor
-was never the room temperature but the air path itself: without the sealed
-plenum, the machine keeps re-breathing its own exhaust. The enclosure is what
-breaks that loop. **A 10 °C cooler room is worth nothing if the box still
-inhales its own tail.**
 
 ## Setup notes
 
