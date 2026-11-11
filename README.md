@@ -120,7 +120,7 @@ about thirty centimetres above it. The machine ends up heating its own supply ai
 
 ![The actual build](faex1-build.jpg)
 
-*The actual build. Enclosure is a reused mooncake gift box; two 80 mm fans bolted through the lid; the controller is taped to the right side and reads 33 °C — below the 35 °C ramp start.*
+*The actual build. Enclosure is a reused mooncake gift box; two 80 mm fans bolted through the lid; the controller is taped to the right side and reads 33 °C — below the 35 °C ramp start. The second revision of this rig is identical apart from the box: same two fans, same controller, same filter-and-plenum layout. Only the container changed.*
 
 ### The fix: separate the intake from the exhaust
 
