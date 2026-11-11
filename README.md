@@ -209,6 +209,20 @@ short of the hard throttling floor.
 The `power` column in the logs is package power — whole-APU, not the GPU core
 — so tiers have to be compared within the same power band.)*
 
+### Without the enclosure, the box is not merely "a bit warmer"
+
+The enclosure is not a nice-to-have. Measured on a five-day stretch where the
+machine ran at a different location with no cooling rig at all, ambient was
+about 10 °C lower than usual — and the full-load temperature was **not lower
+at all**. The samples sit slightly *above* the enclosed-box figures, in the
+same 76–82 °C band, despite the cooler room.
+
+Cooler ambient should have helped. It did not, because the limiting factor
+was never the room temperature but the air path itself: without the sealed
+plenum, the machine keeps re-breathing its own exhaust. The enclosure is what
+breaks that loop. **A 10 °C cooler room is worth nothing if the box still
+inhales its own tail.**
+
 ## Setup notes
 
 - ROCm built from source for `gfx1151`; stock packages did not cover this target
