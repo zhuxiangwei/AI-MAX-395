@@ -105,7 +105,10 @@ the truth.** Any draft-model proposal now has to report results at 32K / 64K /
 
 The FAEX1 ships with a 160 W cooling solution — two turbine fans and a large
 vapor chamber. It is enough for a benchmark run. It is not enough for multi-hour
-inference: sustained load reaches **~98 °C and throttles**.
+inference: sustained load pushes the edge temperature up towards **~94 °C** on
+the highest power tier. The SoC starts downclocking slightly well before the
+hard throttling line — the clock drops a few percent, not to the emergency
+floor.
 
 The bottleneck is not raw dissipation. It is **recirculation**. The rear I/O
 panel is the exhaust; on a desk, that hot air curls back into the top intake
@@ -174,9 +177,35 @@ only number that matters.**
 
 ### Result
 
-Ten-plus hours of continuous inference, no throttling. And the fans stay at the
-low end of their ramp, because the intake air never gets hot — which is the
-quietest possible outcome for a 10,000 RPM fan.
+**Twenty-five days of continuous operation, 14,104 full-load samples, zero
+hard-throttle events** — the clock never fell below the emergency floor. Peak
+edge temperature reached 94 °C on the highest power tier, and the fans stayed
+at the low end of their ramp, because the intake air never gets hot — which is
+the quietest possible outcome for a 10,000 RPM fan.
+
+### Power tiers decide the tail, not the median
+
+The box has two power tiers, set in firmware: **160 W and 120 W**. They change
+the shape of the temperature distribution, not its middle.
+
+| PPT tier | Samples | Median edge temp | p90 | Peak | Samples ≥ 90 °C |
+|---|---|---|---|---|---|
+| 120–130 W | 3,921 | 79.0 °C | 82 °C | **88 °C** | **0** |
+| 140–150 W | 4,150 | 79.0 °C | 82 °C | 91 °C | 7 |
+| 150–160 W | 4,104 | 79.0 °C | 87 °C | **94 °C** | **160** |
+
+Median temperature is identical across all three tiers. What the lower tier
+buys is the **tail**: p90 drops by 5 °C, peak by 6 °C, and the ≥ 90 °C samples
+go to zero. In other words, dropping the tier does not make the machine cooler
+on average — it makes the worst case stop happening.
+
+The remaining gap between the tiers is the chip protecting itself, not the
+cooling struggling: above ~88 °C the clock downclocks by roughly 7 %, well
+short of the hard throttling floor.
+
+*(Temperatures are `edge` readings from the SoC die, sampled once a minute.
+The `power` column in the logs is package power — whole-APU, not the GPU core
+— so tiers have to be compared within the same power band.)*
 
 ## Setup notes
 
