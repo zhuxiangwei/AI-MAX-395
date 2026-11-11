@@ -120,7 +120,9 @@ about thirty centimetres above it. The machine ends up heating its own supply ai
 
 ![The actual build](faex1-build.jpg)
 
-*The actual build. Enclosure is a reused mooncake gift box; two 80 mm fans bolted through the lid; the controller is taped to the right side and reads 33 °C — below the 35 °C ramp start. The second revision of this rig is identical apart from the box: same two fans, same controller, same filter-and-plenum layout. Only the container changed.*
+*The actual build. Enclosure is a reused mooncake gift box; two 80 mm fans bolted through the lid; the controller is taped to the right side and reads 33 °C — below the 35 °C ramp start.*
+
+*The first revision used a reused headphone box instead. It failed for a mundane reason: the cardboard lid was not stiff enough, the fans sagged it over time, and the seam started leaking. Sealing it with wax only bought a little more time. The second revision is identical apart from the enclosure — same two fans, same controller, same filter-and-plenum layout; only a stiffer, better-sealed box was swapped in. The lesson is that the airflow design was never the fragile part; the container was.*
 
 ### The fix: separate the intake from the exhaust
 
@@ -159,7 +161,7 @@ filter) and exhaust at the top (through the fans). No third hole.**
 
 | Item | What | Why this one |
 |---|---|---|
-| Enclosure | Reused gift box, ~1.5 L | Free, and already the right size |
+| Enclosure | Reused mooncake gift box, ~1.5 L | Free, and already the right size — and stiff enough that the fans don't sag the lid |
 | Filter | Washing-machine lint sheet | Catches dust without choking airflow |
 | Fans | 2× SilverStone **SST-FHS80X** | 80 × 38 mm, **50.8 mmH₂O** static, 83.7 CFM, PWM 2k–10k RPM |
 | Control | PWM temperature controller, probe taped at the rear vent | Tracks exhaust temperature, not a lagging die sensor |
