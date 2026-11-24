@@ -1,4 +1,4 @@
-# AI-MAX-395 — Running 125B MoE on 128 GB unified memory
+# AI-MAX-395 — Local LLM & Video Generation on 128 GB Unified Memory
 
 Hands-on deployment notes from a single AMD Ryzen AI Max+ 395 machine.
 Not a tutorial — a record of what was measured, what broke, and what the
