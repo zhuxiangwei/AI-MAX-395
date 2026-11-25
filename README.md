@@ -125,11 +125,11 @@ But dissipation was never the bottleneck. The rear I/O panel is the exhaust;
 on a desk, that hot air curls back into the top intake about thirty centimetres
 above it. **The machine ends up heating its own supply air.**
 
-![Exhaust hood](faex1-cooling.svg)
+![Exhaust hood](inference-host-cooling.svg)
 
 *Schematic — the plenum, the single intake path, and where the probe sits.*
 
-![The actual build](faex1-build.jpg)
+![The actual build](inference-host-build.jpg)
 
 *The actual build. Enclosure is a reused mooncake gift box; two 80 mm fans bolted through the lid; the controller is taped to the right side and reads 33 °C — below the 35 °C ramp start.*
 
