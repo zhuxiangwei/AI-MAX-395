@@ -220,8 +220,8 @@ build, these model quants. Treat them as a data point, not a benchmark suite.
 
 > **Update 2026-11-24:** the Flash-Next Q6 model described above has been retired
 > from the machine. The current LLM backend is **Hy4-Flash SQ-128** (`strata-hy4`
-> 0.1.67) at 256k context with host-side KV and an SSD conversation cache;
-> llama.cpp is now v1.0.0 for the 27B Q8 fallback. The measurements above remain
+> 0.1.67) at 320k context (native 1M, memory-bound) with host-side KV and an SSD
+> conversation cache; llama.cpp is now v1.0.0 for the 27B Q8 fallback. The measurements above remain
 > a valid record of the Flash-Next setup, but no longer describe the current
 > configuration. On thermals: 14,104 is the count of **full-load** samples and
 > 37,013 is the **total** samples in the same 25-day window (2026-10-17 – 11-11);
